@@ -36,6 +36,8 @@ import Data.Word
 import Numeric
 import Text.PrettyPrint.ANSI.Leijen
 
+import Data.Function.Memoize
+
 import qualified Blockchain.Colors as CL
 import Blockchain.Data.Address
 import Blockchain.Data.Code
@@ -115,13 +117,14 @@ createContractCreationTX n gp gl val init' prvKey = do
 {-
   Switch to Either?
 -}
-whoSignedThisTransaction::Transaction->Maybe Address -- Signatures can be malformed, hence the Maybe
-whoSignedThisTransaction t = 
+whoSignedThisTransaction'::Transaction->Maybe Address -- Signatures can be malformed, hence the Maybe
+whoSignedThisTransaction' t = 
     fmap pubKey2Address $ getPubKeyFromSignature xSignature theHash
         where
           xSignature = ExtendedSignature (Signature (fromInteger $ transactionR t) (fromInteger $ transactionS t)) (0x1c == transactionV t)
           SHA theHash = hash $ rlpSerialize $ partialRLPEncode t
 
+whoSignedThisTransaction = memoize whoSignedThisTransaction'
 
 data Transaction = 
   MessageTX {
@@ -145,6 +148,8 @@ data Transaction =
     transactionS::Integer,
     transactionV::Word8
     } deriving (Show, Read, Eq, Generic)
+
+deriveMemoizable ''Transaction
 
 isMessageTX::Transaction->Bool
 isMessageTX MessageTX{} = True

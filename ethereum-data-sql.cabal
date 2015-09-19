@@ -58,6 +58,7 @@ library
                  , ethereum-util
                  , esqueleto
                  , crypto-pubkey-types
+                 , memoize
       		 
     exposed-modules: 
                    Blockchain.Constants
